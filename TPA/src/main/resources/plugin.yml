@@ -1,0 +1,14 @@
+name: TPA
+version: 1.0.0
+main: kr.tpa.TpaPlugin
+api-version: '1.21'
+description: Simple player teleport request plugin
+commands:
+  tpa:
+    description: Send, accept, or deny a teleport request
+    usage: /tpa <player|찬성|거절>
+    permission: tpa.use
+permissions:
+  tpa.use:
+    description: Allows using TPA commands
+    default: true
