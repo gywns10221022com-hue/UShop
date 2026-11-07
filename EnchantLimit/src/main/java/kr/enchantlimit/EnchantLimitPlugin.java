@@ -1,15 +1,12 @@
 package kr.enchantlimit;
 
 import org.bukkit.Material;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
@@ -20,19 +17,20 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.Map;
 
 public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
-    private static final int MAX_SHARPNESS = 15;
-    private static final int MAX_PROTECTION = 5;
+    private static final int MAX_SHARPNESS = 6;
     private static final int MAX_UNBREAKING = 10;
+    private static final int MAX_EFFICIENCY = 7;
 
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info("EnchantLimit enabled: Sharpness cap 15 with +1 damage per level; Protection cap 5; Unbreaking cap 10.");
+        getLogger().info("EnchantLimit enabled: Sharpness 6 (+1 damage per level), Unbreaking 10, Efficiency 7; Protection uses vanilla behavior.");
     }
 
     @EventHandler
     public void onPrepareAnvil(PrepareAnvilEvent event) {
         AnvilInventory inventory = event.getInventory();
+        // Remove the vanilla "Too Expensive" repair-cost ceiling.
         inventory.setMaximumRepairCost(Integer.MAX_VALUE);
 
         ItemStack left = inventory.getItem(0);
@@ -80,7 +78,7 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
         }
     }
 
-    // Each Sharpness level adds exactly 1 bonus damage (level 1 = +1, level 15 = +15).
+    // Each Sharpness level adds exactly 1 bonus damage.
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSharpnessDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof LivingEntity attacker)) return;
@@ -91,42 +89,6 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
         if (sharpness > 0) {
             event.setDamage(event.getDamage() + sharpness);
         }
-    }
-
-    // Protection levels on worn armor act like additional armor points.
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onProtectionArmor(EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof LivingEntity victim)) return;
-
-        AttributeInstance armorAttribute = victim.getAttribute(Attribute.ARMOR);
-        if (armorAttribute == null) return;
-
-        int extraArmor = 0;
-        for (ItemStack piece : victim.getEquipment().getArmorContents()) {
-            if (piece != null && !piece.getType().isAir()) {
-                extraArmor += piece.getEnchantmentLevel(Enchantment.PROTECTION);
-            }
-        }
-        if (extraArmor <= 0) return;
-
-        double damage = event.getDamage();
-        if (damage <= 0) return;
-
-        double armor = armorAttribute.getValue();
-        AttributeInstance toughnessAttribute = victim.getAttribute(Attribute.ARMOR_TOUGHNESS);
-        double toughness = toughnessAttribute == null ? 0.0 : toughnessAttribute.getValue();
-
-        double oldFactor = armorDamageFactor(damage, armor, toughness);
-        double newFactor = armorDamageFactor(damage, armor + extraArmor, toughness);
-        if (oldFactor > 0.0) {
-            event.setDamage(damage * newFactor / oldFactor);
-        }
-    }
-
-    private double armorDamageFactor(double damage, double armor, double toughness) {
-        double reduction = Math.min(20.0,
-                Math.max(armor / 5.0, armor - damage / (2.0 + toughness / 4.0)));
-        return 1.0 - reduction / 25.0;
     }
 
     private int getLevel(ItemMeta meta, Enchantment enchantment) {
@@ -144,8 +106,8 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
 
     private int getCap(Enchantment enchantment) {
         if (enchantment.equals(Enchantment.SHARPNESS)) return MAX_SHARPNESS;
-        if (enchantment.equals(Enchantment.PROTECTION)) return MAX_PROTECTION;
         if (enchantment.equals(Enchantment.UNBREAKING)) return MAX_UNBREAKING;
+        if (enchantment.equals(Enchantment.EFFICIENCY)) return MAX_EFFICIENCY;
         return 0;
     }
 }
