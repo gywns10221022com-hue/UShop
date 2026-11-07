@@ -33,9 +33,13 @@ public final class PlayerTrackerPlugin extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
 
         if (getCommand("trackercompass") != null) {
-            getCommand("추적나침반").setExecutor((sender, command, label, args) -> {
+            getCommand("trackercompass").setExecutor((sender, command, label, args) -> {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage("플레이어만 사용할 수 있습니다.");
+                    return true;
+                }
+                if (!player.isOp()) {
+                    player.sendMessage(ChatColor.RED + "이 명령어는 OP만 사용할 수 있습니다.");
                     return true;
                 }
                 player.getInventory().addItem(createCompass()).values()
@@ -86,6 +90,10 @@ public final class PlayerTrackerPlugin extends JavaPlugin implements Listener {
         if (!isTrackerCompass(event.getItem())) return;
 
         event.setCancelled(true);
+        if (!player.isOp()) {
+            player.sendMessage(ChatColor.RED + "추적 나침반은 OP만 사용할 수 있습니다.");
+            return;
+        }
         if (!hasTrackerCompass(player)) return;
 
         if (player.isSneaking()) {
@@ -125,7 +133,7 @@ public final class PlayerTrackerPlugin extends JavaPlugin implements Listener {
 
     private void updateActionBars() {
         for (Player tracker : Bukkit.getOnlinePlayers()) {
-            if (!hasTrackerCompass(tracker)) continue;
+            if (!tracker.isOp() || !hasTrackerCompass(tracker)) continue;
             if (!displayEnabled.getOrDefault(tracker.getUniqueId(), true)) continue;
 
             Player target = findTarget(tracker);
