@@ -31,7 +31,6 @@ public final class TeamSystemPlugin extends JavaPlugin implements Listener, Comm
     private final Set<UUID> betrayers = new HashSet<>();
 
     @Override public void onEnable() {
-        saveDefaultConfig();
         loadData();
         for (String cmd : List.of("팀생성", "팀", "배신", "동맹")) getCommand(cmd).setExecutor(this);
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -147,7 +146,11 @@ public final class TeamSystemPlugin extends JavaPlugin implements Listener, Comm
                 else msg(p,"동맹 신청을 거절했습니다."); return true;
             }
             if(args[0].equals("끝")) {
-                if(!leader(p,own))return true; if(args.length<2){msg(p,"사용법: /동맹 끝 <팀이름>");return true;}
+                if(!leader(p,own))return true; if(args.length<2) {
+                    if(own.allies.isEmpty()){msg(p,"끝낼 동맹이 없습니다.");return true;}
+                    for(String ally : new HashSet<>(own.allies)){TeamData other=teams.get(ally); if(other!=null)other.allies.remove(own.name.toLowerCase(Locale.ROOT));}
+                    own.allies.clear(); saveData(); msg(p,"모든 동맹을 끝냈습니다."); return true;
+                }
                 TeamData other=teams.get(args[1].toLowerCase(Locale.ROOT)); if(other==null||!own.allies.remove(args[1].toLowerCase(Locale.ROOT))){msg(p,"해당 팀과 동맹이 아닙니다.");return true;}
                 other.allies.remove(own.name.toLowerCase(Locale.ROOT)); saveData();msg(p,"동맹을 끝냈습니다.");return true;
             }
