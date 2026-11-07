@@ -3,7 +3,7 @@ version: 1.0.0
 main: kr.ushop.UShopPlugin
 api-version: '26.3'
 author: UShop
- description: Diamond-based player shop
+description: Diamond-based player shop
 commands:
   ushop:
     description: Open the player shop or list the item in your hand
