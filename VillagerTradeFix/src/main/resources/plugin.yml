@@ -1,0 +1,5 @@
+name: VillagerTradeFix
+version: 1.0.0
+main: kr.villagertradefix.VillagerTradeFixPlugin
+api-version: '26.3'
+description: Prevents villager trades from becoming locked after use.
