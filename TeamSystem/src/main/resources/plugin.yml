@@ -1,0 +1,17 @@
+name: TeamSystem
+version: 1.0.0
+main: kr.teamsystem.TeamSystemPlugin
+api-version: '1.21'
+commands:
+  팀생성:
+    description: 팀을 생성합니다.
+    usage: /팀생성 <팀이름>
+  팀:
+    description: 팀 관리 명령어
+    usage: /팀 <초대|나가기|색상>
+  배신:
+    description: 같은 팀 공격 허용을 전환합니다.
+    usage: /배신
+  동맹:
+    description: 팀 동맹을 관리합니다.
+    usage: /동맹 <팀이름|수락|거절|끝>
