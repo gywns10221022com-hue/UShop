@@ -1,0 +1,5 @@
+name: DeathHead
+version: 1.0.0
+main: kr.deathhead.DeathHeadPlugin
+api-version: '1.21'
+description: 플레이어가 사망하면 해당 플레이어의 머리를 드롭합니다.
