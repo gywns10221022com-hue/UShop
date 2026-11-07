@@ -32,7 +32,7 @@ public final class PlayerTrackerPlugin extends JavaPlugin implements Listener {
         compassKey = new NamespacedKey(this, "tracker_compass");
         getServer().getPluginManager().registerEvents(this, this);
 
-        if (getCommand("추적나침반") != null) {
+        if (getCommand("trackercompass") != null) {
             getCommand("추적나침반").setExecutor((sender, command, label, args) -> {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage("플레이어만 사용할 수 있습니다.");
