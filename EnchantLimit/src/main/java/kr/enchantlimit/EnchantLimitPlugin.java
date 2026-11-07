@@ -20,45 +20,51 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info("EnchantLimit enabled: Sharpness 10, Protection 7, no anvil too-expensive limit.");
+        getLogger().info("EnchantLimit enabled: Sharpness 10, Protection 7, unlimited anvil cost cap.");
     }
 
     @EventHandler
     public void onPrepareAnvil(PrepareAnvilEvent event) {
         AnvilInventory inventory = event.getInventory();
+
+        // Remove the vanilla "Too Expensive!" level-cost ceiling.
         inventory.setMaximumRepairCost(Integer.MAX_VALUE);
 
         ItemStack left = inventory.getItem(0);
         ItemStack right = inventory.getItem(1);
         if (left == null || right == null || left.getType() == Material.AIR || right.getType() == Material.AIR) return;
 
-        ItemStack output = event.getResult();
-        if (output == null) return;
-        output = output.clone();
-
-        ItemMeta outputMeta = output.getItemMeta();
-        if (outputMeta == null) return;
+        // Do not depend on vanilla's result: it can reject custom levels above vanilla limits.
+        ItemStack output = event.getResult() == null ? left.clone() : event.getResult().clone();
+        ItemMeta meta = output.getItemMeta();
+        if (meta == null) return;
 
         Map<Enchantment, Integer> incoming = getEnchantments(right);
         boolean changed = false;
+
         for (Map.Entry<Enchantment, Integer> entry : incoming.entrySet()) {
             Enchantment enchantment = entry.getKey();
             int cap = getCap(enchantment);
             if (cap == 0) continue;
 
-            int current = outputMeta.getEnchantLevel(enchantment);
+            int current = meta.getEnchantLevel(enchantment);
             int offered = entry.getValue();
             int combined = current == offered ? current + 1 : Math.max(current, offered);
             int level = Math.min(cap, combined);
+
             if (level > current) {
-                outputMeta.addEnchant(enchantment, level, true);
+                meta.addEnchant(enchantment, level, true);
                 changed = true;
             }
         }
 
         if (changed) {
-            output.setItemMeta(outputMeta);
+            output.setItemMeta(meta);
             event.setResult(output);
+            // Keep the real XP cost, but the maximum permitted cost is unlimited.
+            if (inventory.getRepairCost() > inventory.getMaximumRepairCost()) {
+                inventory.setRepairCost(inventory.getMaximumRepairCost());
+            }
         }
     }
 
