@@ -27,7 +27,7 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info("EnchantLimit enabled: Sharpness cap 15 with level-scaled bonus damage; Protection cap 5; Unbreaking cap 10.");
+        getLogger().info("EnchantLimit enabled: Sharpness cap 15 with +1 damage per level; Protection cap 5; Unbreaking cap 10.");
     }
 
     @EventHandler
@@ -80,7 +80,7 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
         }
     }
 
-    // Sharpness bonus: level 5 = +3, level 8 = +4.5, level 10 = +5.5.
+    // Each Sharpness level adds exactly 1 bonus damage (level 1 = +1, level 15 = +15).
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSharpnessDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof LivingEntity attacker)) return;
@@ -89,7 +89,7 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
 
         int sharpness = weapon.getEnchantmentLevel(Enchantment.SHARPNESS);
         if (sharpness > 0) {
-            event.setDamage(event.getDamage() + (0.5 * sharpness + 0.5));
+            event.setDamage(event.getDamage() + sharpness);
         }
     }
 
