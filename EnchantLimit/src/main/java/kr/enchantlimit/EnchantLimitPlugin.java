@@ -1,9 +1,16 @@
 package kr.enchantlimit;
 
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
@@ -20,7 +27,7 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info("EnchantLimit enabled: Sharpness 10, Protection 7; scaled anvil costs.");
+        getLogger().info("EnchantLimit enabled: Sharpness 10 adds +1 damage per level; Protection adds armor per level.");
     }
 
     @EventHandler
@@ -50,7 +57,6 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
             int cap = getCap(enchantment);
             if (cap == 0) continue;
 
-            // Always calculate from the original left input, not vanilla's already-combined result.
             int current = getLevel(leftMeta, enchantment);
             int offered = entry.getValue();
             int combined = current == offered ? current + 1 : Math.max(current, offered);
@@ -63,7 +69,6 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
                 outputMeta.addEnchant(enchantment, level, true);
             }
 
-            // Higher enchant levels deliberately cost more experience.
             totalCost += level * 2 + Math.max(0, level - 5) * 3;
             changed = true;
         }
@@ -73,6 +78,58 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
             event.setResult(output);
             inventory.setRepairCost(Math.max(1, totalCost));
         }
+    }
+
+    // Sharpness adds one full damage point for every enchantment level.
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onSharpnessDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof LivingEntity attacker)) return;
+        ItemStack weapon = attacker.getEquipment() == null ? null : attacker.getEquipment().getItemInMainHand();
+        if (weapon == null || weapon.getType().isAir()) return;
+
+        int sharpness = weapon.getEnchantmentLevel(Enchantment.SHARPNESS);
+        if (sharpness > 0) {
+            event.setDamage(event.getDamage() + sharpness);
+        }
+    }
+
+    // Protection levels on worn armor act like additional armor points.
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onProtectionArmor(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof LivingEntity victim)) return;
+        if (event instanceof EntityDamageByEntityEvent) {
+            // Also handled here; Sharpness bonus is already included in the incoming damage.
+        }
+
+        AttributeInstance armorAttribute = victim.getAttribute(Attribute.ARMOR);
+        if (armorAttribute == null) return;
+
+        int extraArmor = 0;
+        for (ItemStack piece : victim.getEquipment().getArmorContents()) {
+            if (piece != null && !piece.getType().isAir()) {
+                extraArmor += piece.getEnchantmentLevel(Enchantment.PROTECTION);
+            }
+        }
+        if (extraArmor <= 0) return;
+
+        double damage = event.getDamage();
+        if (damage <= 0) return;
+
+        double armor = armorAttribute.getValue();
+        AttributeInstance toughnessAttribute = victim.getAttribute(Attribute.ARMOR_TOUGHNESS);
+        double toughness = toughnessAttribute == null ? 0.0 : toughnessAttribute.getValue();
+
+        double oldFactor = armorDamageFactor(damage, armor, toughness);
+        double newFactor = armorDamageFactor(damage, armor + extraArmor, toughness);
+        if (oldFactor > 0.0) {
+            event.setDamage(damage * newFactor / oldFactor);
+        }
+    }
+
+    private double armorDamageFactor(double damage, double armor, double toughness) {
+        double reduction = Math.min(20.0,
+                Math.max(armor / 5.0, armor - damage / (2.0 + toughness / 4.0)));
+        return 1.0 - reduction / 25.0;
     }
 
     private int getLevel(ItemMeta meta, Enchantment enchantment) {
