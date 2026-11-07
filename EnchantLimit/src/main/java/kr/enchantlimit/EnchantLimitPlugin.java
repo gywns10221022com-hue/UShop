@@ -20,24 +20,22 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info("EnchantLimit enabled: Sharpness 10, Protection 7, unlimited anvil cost cap.");
+        getLogger().info("EnchantLimit enabled: Sharpness 10, Protection 7; unlimited anvil cost.");
     }
 
     @EventHandler
     public void onPrepareAnvil(PrepareAnvilEvent event) {
         AnvilInventory inventory = event.getInventory();
-
-        // Remove the vanilla "Too Expensive!" level-cost ceiling.
         inventory.setMaximumRepairCost(Integer.MAX_VALUE);
 
         ItemStack left = inventory.getItem(0);
         ItemStack right = inventory.getItem(1);
-        if (left == null || right == null || left.getType() == Material.AIR || right.getType() == Material.AIR) return;
+        if (left == null || right == null
+                || left.getType() == Material.AIR || right.getType() == Material.AIR) return;
 
-        // Do not depend on vanilla's result: it can reject custom levels above vanilla limits.
         ItemStack output = event.getResult() == null ? left.clone() : event.getResult().clone();
-        ItemMeta meta = output.getItemMeta();
-        if (meta == null) return;
+        ItemMeta outputMeta = output.getItemMeta();
+        if (outputMeta == null) return;
 
         Map<Enchantment, Integer> incoming = getEnchantments(right);
         boolean changed = false;
@@ -47,30 +45,38 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
             int cap = getCap(enchantment);
             if (cap == 0) continue;
 
-            int current = meta.getEnchantLevel(enchantment);
+            int current = getLevel(outputMeta, enchantment);
             int offered = entry.getValue();
             int combined = current == offered ? current + 1 : Math.max(current, offered);
             int level = Math.min(cap, combined);
 
-            if (level > current) {
-                meta.addEnchant(enchantment, level, true);
-                changed = true;
+            if (level <= current) continue;
+
+            // Enchanted books store enchantments separately from normal item metadata.
+            if (outputMeta instanceof EnchantmentStorageMeta bookMeta) {
+                bookMeta.addStoredEnchant(enchantment, level, true);
+            } else {
+                outputMeta.addEnchant(enchantment, level, true);
             }
+            changed = true;
         }
 
         if (changed) {
-            output.setItemMeta(meta);
+            output.setItemMeta(outputMeta);
             event.setResult(output);
-            // Keep the real XP cost, but the maximum permitted cost is unlimited.
-            if (inventory.getRepairCost() > inventory.getMaximumRepairCost()) {
-                inventory.setRepairCost(inventory.getMaximumRepairCost());
-            }
         }
+    }
+
+    private int getLevel(ItemMeta meta, Enchantment enchantment) {
+        if (meta instanceof EnchantmentStorageMeta bookMeta) {
+            return bookMeta.getStoredEnchantLevel(enchantment);
+        }
+        return meta.getEnchantLevel(enchantment);
     }
 
     private Map<Enchantment, Integer> getEnchantments(ItemStack item) {
         ItemMeta meta = item.getItemMeta();
-        if (meta instanceof EnchantmentStorageMeta book) return book.getStoredEnchants();
+        if (meta instanceof EnchantmentStorageMeta bookMeta) return bookMeta.getStoredEnchants();
         return meta == null ? Map.of() : meta.getEnchants();
     }
 
