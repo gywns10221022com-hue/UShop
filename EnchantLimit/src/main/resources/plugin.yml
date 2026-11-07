@@ -1,0 +1,5 @@
+name: EnchantLimit
+version: 1.0.0
+main: kr.enchantlimit.EnchantLimitPlugin
+api-version: '26.3'
+description: 모루에서 날카로움 10, 보호 7까지 합칠 수 있게 하고 비용 제한을 제거합니다.
