@@ -38,6 +38,16 @@ jobs:
       - name: Build VillagerTradeFix
         working-directory: VillagerTradeFix
         run: gradle clean build
+      - name: Build TeamSystem
+        working-directory: TeamSystem
+        run: gradle clean build
+      - name: Upload TeamSystem.jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: TeamSystem
+          path: TeamSystem/build/libs/TeamSystem-1.0.0.jar
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload VillagerTradeFix.jar
         uses: actions/upload-artifact@v4
         with:
