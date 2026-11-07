@@ -5,6 +5,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
+import org.bukkit.Material;
+import org.bukkit.inventory.*;
+import org.bukkit.inventory.meta.*;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -29,10 +33,11 @@ public final class TeamSystemPlugin extends JavaPlugin implements Listener, Comm
     private final Map<UUID, String> teamInvites = new HashMap<>();
     private final Map<String, String> allianceInvites = new HashMap<>();
     private final Set<UUID> betrayers = new HashSet<>();
+    private static final String COLOR_GUI="팀 이름표 색상 선택", LIST_GUI="전체 팀 목록";
 
     @Override public void onEnable() {
         loadData();
-        for (String cmd : List.of("팀생성", "팀", "배신", "동맹")) getCommand(cmd).setExecutor(this);
+        for (String cmd : List.of("팀생성", "팀", "배신", "동맹", "팀장")) getCommand(cmd).setExecutor(this);
         Bukkit.getPluginManager().registerEvents(this, this);
         refreshOnlineNames();
         getLogger().info("TeamSystem enabled");
@@ -62,6 +67,46 @@ public final class TeamSystemPlugin extends JavaPlugin implements Listener, Comm
         p.setPlayerListName(td.color + p.getName() + ChatColor.RESET);
     }
     private void refreshOnlineNames(){ for(Player p:Bukkit.getOnlinePlayers()) updateName(p); }
+    private ItemStack menuItem(Material material,String title,List<String> lore) {
+        ItemStack item=new ItemStack(material); ItemMeta meta=item.getItemMeta();
+        meta.setDisplayName(title); meta.setLore(lore); item.setItemMeta(meta); return item;
+    }
+    private void openColorMenu(Player p) {
+        Inventory inv=Bukkit.createInventory(null,27,COLOR_GUI); int slot=10;
+        for(var e:COLORS.entrySet()) {
+            Material mat=switch(e.getKey()) {
+                case "빨강" -> Material.RED_WOOL; case "주황","금색" -> Material.ORANGE_WOOL;
+                case "노랑" -> Material.YELLOW_WOOL; case "초록" -> Material.LIME_WOOL;
+                case "청록" -> Material.CYAN_WOOL; case "파랑" -> Material.BLUE_WOOL;
+                case "보라","분홍" -> Material.PURPLE_WOOL; case "회색" -> Material.GRAY_WOOL;
+                case "검정" -> Material.BLACK_WOOL; default -> Material.WHITE_WOOL;
+            };
+            inv.setItem(slot,menuItem(mat,e.getValue()+e.getKey(),List.of("클릭하여 팀 이름표 색상으로 설정")));
+            slot++; if(slot==17)slot=19;
+        }
+        p.openInventory(inv);
+    }
+    private void openTeamList(Player p) {
+        Inventory inv=Bukkit.createInventory(null,54,LIST_GUI);
+        List<TeamData> sorted=new ArrayList<>(teams.values());
+        sorted.sort(Comparator.comparing(t->t.name.toLowerCase(Locale.ROOT)));
+        int slot=0;
+        for(TeamData t:sorted) {
+            if(slot>=54)break;
+            OfflinePlayer leaderPlayer=Bukkit.getOfflinePlayer(t.leader);
+            ItemStack head=new ItemStack(Material.PLAYER_HEAD); SkullMeta meta=(SkullMeta)head.getItemMeta();
+            meta.setOwningPlayer(leaderPlayer);
+            meta.setDisplayName(t.color+"[팀장] "+(leaderPlayer.getName()==null?"알 수 없음":leaderPlayer.getName())+ChatColor.RESET);
+            List<String> lore=new ArrayList<>(); lore.add(ChatColor.YELLOW+"팀 이름: "+t.name);
+            lore.add(ChatColor.GRAY+"소속 팀원:");
+            for(UUID id:t.members) { OfflinePlayer member=Bukkit.getOfflinePlayer(id);
+                lore.add(ChatColor.WHITE+"- "+(member.getName()==null?id.toString():member.getName())); }
+            lore.add(ChatColor.GREEN+"인원: "+t.members.size()+"명");
+            meta.setLore(lore); head.setItemMeta(meta); inv.setItem(slot++,head);
+        }
+        if(sorted.isEmpty()) inv.setItem(22,menuItem(Material.BARRIER,ChatColor.RED+"생성된 팀이 없습니다.",List.of()));
+        p.openInventory(inv);
+    }
     private void saveData() {
         getConfig().set("teams", null);
         for(TeamData t:teams.values()) {
@@ -121,6 +166,8 @@ public final class TeamSystemPlugin extends JavaPlugin implements Listener, Comm
                 teamInvites.put(target.getUniqueId(),t.name.toLowerCase(Locale.ROOT));
                 msg(target,"'"+t.name+"' 팀 초대가 왔습니다. /팀 초대 수락 으로 가입하세요."); msg(p,target.getName()+"님을 초대했습니다."); return true;
             }
+            if(args[0].equals("이름표")) { TeamData t=teamOf(p.getUniqueId()); if(t==null){msg(p,"팀에 속해 있지 않습니다.");return true;} if(leader(p,t))openColorMenu(p); return true; }
+            if(args[0].equals("목록")) { openTeamList(p); return true; }
             if(args[0].equals("나가기")) { if(teamOf(p.getUniqueId())==null)msg(p,"속한 팀이 없습니다."); else leave(p,true); return true; }
             if(args[0].equals("색상")) {
                 TeamData t=teamOf(p.getUniqueId()); if(t==null){msg(p,"팀에 속해 있지 않습니다.");return true;} if(!leader(p,t))return true;
@@ -129,6 +176,17 @@ public final class TeamSystemPlugin extends JavaPlugin implements Listener, Comm
                 t.color=c; for(UUID u:t.members){Player m=Bukkit.getPlayer(u);if(m!=null)updateName(m);} saveData(); msg(p,"팀 이름표 색상을 "+args[1]+"(으)로 변경했습니다.");return true;
             }
             msg(p,"/팀 초대 <플레이어> | /팀 초대 수락 | /팀 나가기 | /팀 색상 <색>"); return true;
+        }
+        if(command.getName().equalsIgnoreCase("팀장")) {
+            if(!playerOnly(sender))return true; Player p=(Player)sender;
+            TeamData t=teamOf(p.getUniqueId()); if(t==null){msg(p,"팀에 속해 있지 않습니다.");return true;}
+            if(!leader(p,t))return true;
+            int offset=args.length>0&&args[0].equals("임명")?1:0;
+            if(args.length<=offset){msg(p,"사용법: /팀장 임명 <플레이어이름>");return true;}
+            Player target=Bukkit.getPlayerExact(args[offset]);
+            if(target==null||teamOf(target.getUniqueId())!=t){msg(p,"같은 팀에 속한 접속 중인 플레이어만 팀장으로 임명할 수 있습니다.");return true;}
+            t.leader=target.getUniqueId(); saveData();
+            msg(p,target.getName()+"님을 새 팀장으로 임명했습니다."); msg(target,"당신이 팀장으로 임명되었습니다."); return true;
         }
         if(command.getName().equalsIgnoreCase("배신")) {
             if(!playerOnly(sender))return true; Player p=(Player)sender; if(teamOf(p.getUniqueId())==null){msg(p,"팀에 속해 있지 않습니다.");return true;}
@@ -173,6 +231,21 @@ public final class TeamSystemPlugin extends JavaPlugin implements Listener, Comm
         if(a==null||v==null)return;
         if(a.name.equalsIgnoreCase(v.name)) { if(!betrayers.contains(attacker.getUniqueId()))e.setCancelled(true); }
         else if(a.allies.contains(v.name.toLowerCase(Locale.ROOT))) e.setCancelled(true);
+    }
+    @EventHandler public void onInventoryClick(InventoryClickEvent e) {
+        if(!(e.getWhoClicked() instanceof Player p))return;
+        String title=e.getView().getTitle();
+        if(!title.equals(COLOR_GUI)&&!title.equals(LIST_GUI))return;
+        e.setCancelled(true);
+        if(title.equals(COLOR_GUI)&&e.getCurrentItem()!=null&&e.getCurrentItem().hasItemMeta()) {
+            TeamData t=teamOf(p.getUniqueId());
+            if(t==null||!t.leader.equals(p.getUniqueId())){p.closeInventory();return;}
+            String display=ChatColor.stripColor(e.getCurrentItem().getItemMeta().getDisplayName());
+            ChatColor chosen=COLORS.get(display); if(chosen==null)return;
+            t.color=chosen;
+            for(UUID id:t.members){Player member=Bukkit.getPlayer(id);if(member!=null)updateName(member);}
+            saveData(); msg(p,"팀 이름표 색상을 "+display+"(으)로 변경했습니다."); p.closeInventory();
+        }
     }
     @EventHandler public void onJoin(org.bukkit.event.player.PlayerJoinEvent e) { updateName(e.getPlayer()); }
 }
