@@ -1,4 +1,4 @@
-name: Build UShop
+name: Build Plugins
 on:
   push:
     branches: [ main ]
@@ -15,12 +15,22 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.2.1'
-      - name: Build plugin
+      - name: Build UShop
+        run: gradle clean build
+      - name: Build PlayerTracker
+        working-directory: PlayerTracker
         run: gradle clean build
       - name: Upload UShop.jar
         uses: actions/upload-artifact@v4
         with:
           name: UShop
           path: build/libs/UShop.jar
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload PlayerTracker.jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlayerTracker
+          path: PlayerTracker/build/libs/PlayerTracker-1.0.0.jar
           if-no-files-found: error
           retention-days: 14
