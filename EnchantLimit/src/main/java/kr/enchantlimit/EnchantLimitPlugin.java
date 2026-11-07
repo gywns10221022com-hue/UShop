@@ -20,7 +20,7 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info("EnchantLimit enabled: Sharpness 10, Protection 7; unlimited anvil cost.");
+        getLogger().info("EnchantLimit enabled: Sharpness 10, Protection 7; scaled anvil costs.");
     }
 
     @EventHandler
@@ -33,11 +33,16 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
         if (left == null || right == null
                 || left.getType() == Material.AIR || right.getType() == Material.AIR) return;
 
-        ItemStack output = event.getResult() == null ? left.clone() : event.getResult().clone();
+        ItemStack vanillaResult = event.getResult();
+        if (vanillaResult == null) return;
+
+        ItemStack output = vanillaResult.clone();
         ItemMeta outputMeta = output.getItemMeta();
-        if (outputMeta == null) return;
+        ItemMeta leftMeta = left.getItemMeta();
+        if (outputMeta == null || leftMeta == null) return;
 
         Map<Enchantment, Integer> incoming = getEnchantments(right);
+        int totalCost = 0;
         boolean changed = false;
 
         for (Map.Entry<Enchantment, Integer> entry : incoming.entrySet()) {
@@ -45,25 +50,28 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
             int cap = getCap(enchantment);
             if (cap == 0) continue;
 
-            int current = getLevel(outputMeta, enchantment);
+            // Always calculate from the original left input, not vanilla's already-combined result.
+            int current = getLevel(leftMeta, enchantment);
             int offered = entry.getValue();
             int combined = current == offered ? current + 1 : Math.max(current, offered);
             int level = Math.min(cap, combined);
+            if (level <= 0) continue;
 
-            if (level <= current) continue;
-
-            // Enchanted books store enchantments separately from normal item metadata.
             if (outputMeta instanceof EnchantmentStorageMeta bookMeta) {
                 bookMeta.addStoredEnchant(enchantment, level, true);
             } else {
                 outputMeta.addEnchant(enchantment, level, true);
             }
+
+            // Higher enchant levels deliberately cost more experience.
+            totalCost += level * 2 + Math.max(0, level - 5) * 3;
             changed = true;
         }
 
         if (changed) {
             output.setItemMeta(outputMeta);
             event.setResult(output);
+            inventory.setRepairCost(Math.max(1, totalCost));
         }
     }
 
