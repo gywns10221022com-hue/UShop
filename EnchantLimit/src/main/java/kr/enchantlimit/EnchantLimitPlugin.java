@@ -1,7 +1,5 @@
 package kr.enchantlimit;
 
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,15 +26,14 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
     public void onPrepareAnvil(PrepareAnvilEvent event) {
         AnvilInventory inventory = event.getInventory();
         inventory.setMaximumRepairCost(Integer.MAX_VALUE);
-        inventory.setRepairCost(1);
 
         ItemStack left = inventory.getItem(0);
         ItemStack right = inventory.getItem(1);
         if (left == null || right == null || left.getType() == Material.AIR || right.getType() == Material.AIR) return;
 
         ItemStack output = event.getResult();
-        if (output == null || output.getType() == Material.AIR) output = left.clone();
-        else output = output.clone();
+        if (output == null) return;
+        output = output.clone();
 
         ItemMeta outputMeta = output.getItemMeta();
         if (outputMeta == null) return;
@@ -58,11 +55,10 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
             }
         }
 
-        if (changed || event.getResult() == null) {
+        if (changed) {
             output.setItemMeta(outputMeta);
             event.setResult(output);
         }
-        inventory.setRepairCost(1);
     }
 
     private Map<Enchantment, Integer> getEnchantments(ItemStack item) {
