@@ -1,0 +1,23 @@
+name: UShop
+version: 1.0.0
+main: kr.ushop.UShopPlugin
+api-version: '26.3'
+author: UShop
+ description: Diamond-based player shop
+commands:
+  ushop:
+    description: Open the player shop or list the item in your hand
+    usage: /ushop [price]
+    aliases: [유저상점]
+  myshop:
+    description: View your listings
+    usage: /myshop
+    aliases: [내상점]
+  shopcancel:
+    description: Cancel your listing by ID
+    usage: /shopcancel <id>
+    aliases: [판매취소]
+  shopclaim:
+    description: Claim your diamond earnings
+    usage: /shopclaim
+    aliases: [판매금수령]
