@@ -1,0 +1,5 @@
+name: DragonEggBuff
+version: 1.0.0
+main: kr.dragoneggbuff.DragonEggBuffPlugin
+api-version: '1.21'
+description: Grants fire resistance and resistance while carrying a dragon egg
