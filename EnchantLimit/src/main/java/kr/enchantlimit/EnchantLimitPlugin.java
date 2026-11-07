@@ -5,7 +5,6 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -22,12 +21,13 @@ import java.util.Map;
 
 public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
     private static final int MAX_SHARPNESS = 10;
-    private static final int MAX_PROTECTION = 7;
+    private static final int MAX_PROTECTION = 5;
+    private static final int MAX_UNBREAKING = 10;
 
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info("EnchantLimit enabled: Sharpness 10 adds +1 damage per level; Protection adds armor per level.");
+        getLogger().info("EnchantLimit enabled: Sharpness bonus damage scales by level; Protection cap 5; Unbreaking cap 10.");
     }
 
     @EventHandler
@@ -80,7 +80,7 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
         }
     }
 
-    // Sharpness adds one full damage point for every enchantment level.
+    // Sharpness bonus: level 5 = +3, level 8 = +4.5, level 10 = +5.5.
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onSharpnessDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof LivingEntity attacker)) return;
@@ -89,7 +89,7 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
 
         int sharpness = weapon.getEnchantmentLevel(Enchantment.SHARPNESS);
         if (sharpness > 0) {
-            event.setDamage(event.getDamage() + sharpness);
+            event.setDamage(event.getDamage() + (0.5 * sharpness + 0.5));
         }
     }
 
@@ -97,9 +97,6 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onProtectionArmor(EntityDamageEvent event) {
         if (!(event.getEntity() instanceof LivingEntity victim)) return;
-        if (event instanceof EntityDamageByEntityEvent) {
-            // Also handled here; Sharpness bonus is already included in the incoming damage.
-        }
 
         AttributeInstance armorAttribute = victim.getAttribute(Attribute.ARMOR);
         if (armorAttribute == null) return;
@@ -148,6 +145,7 @@ public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
     private int getCap(Enchantment enchantment) {
         if (enchantment.equals(Enchantment.SHARPNESS)) return MAX_SHARPNESS;
         if (enchantment.equals(Enchantment.PROTECTION)) return MAX_PROTECTION;
+        if (enchantment.equals(Enchantment.UNBREAKING)) return MAX_UNBREAKING;
         return 0;
     }
 }
