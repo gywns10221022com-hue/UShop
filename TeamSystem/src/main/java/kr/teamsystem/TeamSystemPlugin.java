@@ -1,6 +1,7 @@
 package kr.teamsystem;
 
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.ChatColor;
 import org.bukkit.command.*;
 import org.bukkit.configuration.ConfigurationSection;
