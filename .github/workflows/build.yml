@@ -26,6 +26,16 @@ jobs:
       - name: Build EnchantLimit
         working-directory: EnchantLimit
         run: gradle clean build
+      - name: Build TPA
+        working-directory: TPA
+        run: gradle clean build
+      - name: Upload TPA.jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: TPA
+          path: TPA/build/libs/TPA-1.0.0.jar
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload EnchantLimit.jar
         uses: actions/upload-artifact@v4
         with:
