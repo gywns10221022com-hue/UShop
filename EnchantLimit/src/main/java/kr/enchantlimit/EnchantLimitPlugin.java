@@ -20,14 +20,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.Map;
 
 public final class EnchantLimitPlugin extends JavaPlugin implements Listener {
-    private static final int MAX_SHARPNESS = 10;
+    private static final int MAX_SHARPNESS = 15;
     private static final int MAX_PROTECTION = 5;
     private static final int MAX_UNBREAKING = 10;
 
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
-        getLogger().info("EnchantLimit enabled: Sharpness bonus damage scales by level; Protection cap 5; Unbreaking cap 10.");
+        getLogger().info("EnchantLimit enabled: Sharpness cap 15 with level-scaled bonus damage; Protection cap 5; Unbreaking cap 10.");
     }
 
     @EventHandler
