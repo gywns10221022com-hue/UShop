@@ -4,7 +4,7 @@ main: kr.playertracker.PlayerTrackerPlugin
 api-version: '26.3'
 description: 전용 나침반으로 온라인 플레이어를 추적합니다.
 commands:
-  추적나침반:
+  trackercompass:
     description: 전용 추적 나침반을 받습니다.
     usage: /추적나침반
-    aliases: [trackercompass]
+    aliases: [추적나침반]
