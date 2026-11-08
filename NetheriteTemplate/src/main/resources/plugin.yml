@@ -1,0 +1,5 @@
+name: NetheriteTemplate
+version: 1.0.0
+main: kr.netheritetemplate.NetheriteTemplatePlugin
+api-version: '1.21'
+description: Adds a crafting recipe for the Netherite Upgrade Smithing Template
