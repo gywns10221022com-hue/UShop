@@ -30,7 +30,7 @@ public final class SophisticatedBackpacksPlugin extends JavaPlugin implements Li
     private static final String[] NAMES = {
         "가죽 백팩", "구리 백팩", "철 백팩", "금 백팩", "다이아몬드 백팩", "네더라이트 백팩"
     };
-    private static final int[] SIZES = {9, 18, 27, 36, 45, 54};
+    private static final int[] SIZES = {18, 27, 36, 45, 54, 54};
 
     @Override
     public void onEnable() {
