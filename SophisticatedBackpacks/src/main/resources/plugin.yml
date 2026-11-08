@@ -1,0 +1,5 @@
+name: SophisticatedBackpacks
+version: 1.0.0
+main: kr.sophisticatedbackpacks.SophisticatedBackpacksPlugin
+api-version: '1.21'
+description: Backpack tiers, crafting recipes and storage GUI for Paper
