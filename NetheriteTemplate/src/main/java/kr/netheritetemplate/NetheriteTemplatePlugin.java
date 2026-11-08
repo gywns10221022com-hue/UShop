@@ -3,6 +3,7 @@ package kr.netheritetemplate;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -12,16 +13,13 @@ public final class NetheriteTemplatePlugin extends JavaPlugin {
         NamespacedKey key = new NamespacedKey(this, "netherite_upgrade_template");
         ShapedRecipe recipe = new ShapedRecipe(
                 key,
-                new org.bukkit.inventory.ItemStack(Material.NETHERITE_UPGRADE_SMITHING_TEMPLATE)
+                new ItemStack(Material.NETHERITE_UPGRADE_SMITHING_TEMPLATE)
         );
 
-        recipe.shape("ANA", "ANA", "AAA");
+        recipe.shape("ANA", "AIA", "AAA");
         recipe.setIngredient('A', Material.ANCIENT_DEBRIS);
         recipe.setIngredient('N', Material.NETHERRACK);
-
-        // Replace the center ingredient of the middle row with a netherite ingot.
-        recipe.setIngredient('N', Material.NETHERITE_INGOT);
-        recipe.setIngredient('A', Material.ANCIENT_DEBRIS);
+        recipe.setIngredient('I', Material.NETHERITE_INGOT);
 
         Bukkit.removeRecipe(key);
         if (Bukkit.addRecipe(recipe)) {
