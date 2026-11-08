@@ -41,6 +41,16 @@ jobs:
       - name: Build TeamSystem
         working-directory: TeamSystem
         run: gradle clean build
+      - name: Build SophisticatedBackpacks
+        working-directory: SophisticatedBackpacks
+        run: gradle clean build
+      - name: Upload SophisticatedBackpacks.jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: SophisticatedBackpacks
+          path: SophisticatedBackpacks/build/libs/SophisticatedBackpacks-1.0.0.jar
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload TeamSystem.jar
         uses: actions/upload-artifact@v4
         with:
