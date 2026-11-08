@@ -30,7 +30,15 @@ public final class DragonEggBuffPlugin extends JavaPlugin {
                 player.addPotionEffect(new PotionEffect(
                     PotionEffectType.RESISTANCE,
                     EFFECT_DURATION_TICKS,
-                    0,
+                    1,
+                    true,
+                    false,
+                    true
+                ));
+                player.addPotionEffect(new PotionEffect(
+                    PotionEffectType.HASTE,
+                    EFFECT_DURATION_TICKS,
+                    3,
                     true,
                     false,
                     true
