@@ -47,6 +47,16 @@ jobs:
       - name: Build NetheriteTemplate
         working-directory: NetheriteTemplate
         run: gradle clean build
+      - name: Build ServerStart
+        working-directory: ServerStart
+        run: gradle clean build
+      - name: Upload ServerStart.jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: ServerStart
+          path: ServerStart/build/libs/ServerStart-1.0.0.jar
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload NetheriteTemplate.jar
         uses: actions/upload-artifact@v4
         with:
