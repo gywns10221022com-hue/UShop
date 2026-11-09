@@ -1,0 +1,14 @@
+name: ServerStart
+version: 1.0.0
+main: kr.serverstart.ServerStartPlugin
+api-version: '1.21'
+description: Locks players until an operator starts the server
+commands:
+  시작:
+    description: Starts the server and unlocks all players
+    usage: /시작
+    permission: serverstart.start
+permissions:
+  serverstart.start:
+    description: Allows starting the server
+    default: op
