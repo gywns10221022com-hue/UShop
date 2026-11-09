@@ -65,7 +65,7 @@ public final class ServerStartPlugin extends JavaPlugin implements Listener {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!command.getName().equalsIgnoreCase("시작")) return false;
-        if (!sender.isOp() && !sender.hasPermission("serverstart.start")) {
+        if (!sender.isOp()) {
             sender.sendMessage("§c이 명령어는 OP만 사용할 수 있습니다.");
             return true;
         }
