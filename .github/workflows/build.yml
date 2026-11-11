@@ -50,6 +50,16 @@ jobs:
       - name: Build ServerStart
         working-directory: ServerStart
         run: gradle clean build
+      - name: Build SwordEnchantMix
+        working-directory: SwordEnchantMix
+        run: gradle clean build
+      - name: Upload SwordEnchantMix.jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: SwordEnchantMix
+          path: SwordEnchantMix/build/libs/SwordEnchantMix-1.0.0.jar
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload ServerStart.jar
         uses: actions/upload-artifact@v4
         with:
