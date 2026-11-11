@@ -1,0 +1,5 @@
+name: AutoSmeltOres
+version: 1.0.0
+main: kr.autosmeltores.AutoSmeltOresPlugin
+api-version: '1.21'
+description: Automatically smelts iron and gold ore drops
