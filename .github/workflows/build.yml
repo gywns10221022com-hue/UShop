@@ -53,6 +53,16 @@ jobs:
       - name: Build SwordEnchantMix
         working-directory: SwordEnchantMix
         run: gradle clean build
+      - name: Build AutoSmeltOres
+        working-directory: AutoSmeltOres
+        run: gradle clean build
+      - name: Upload AutoSmeltOres.jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoSmeltOres
+          path: AutoSmeltOres/build/libs/AutoSmeltOres-1.0.0.jar
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload SwordEnchantMix.jar
         uses: actions/upload-artifact@v4
         with:
