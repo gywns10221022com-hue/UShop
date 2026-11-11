@@ -1,0 +1,5 @@
+name: SwordEnchantMix
+version: 1.0.0
+main: kr.swordenchantmix.SwordEnchantMixPlugin
+api-version: '1.21'
+description: Allows Sharpness, Smite and Bane of Arthropods to coexist on swords
