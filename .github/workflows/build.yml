@@ -56,6 +56,16 @@ jobs:
       - name: Build AutoSmeltOres
         working-directory: AutoSmeltOres
         run: gradle clean build
+      - name: Build CraftingKey
+        working-directory: CraftingKey
+        run: gradle clean build
+      - name: Upload CraftingKey.jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: CraftingKey
+          path: CraftingKey/build/libs/CraftingKey-1.0.0.jar
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload AutoSmeltOres.jar
         uses: actions/upload-artifact@v4
         with:
