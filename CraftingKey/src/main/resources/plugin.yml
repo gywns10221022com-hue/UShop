@@ -1,0 +1,5 @@
+name: CraftingKey
+version: 1.0.0
+main: kr.craftingkey.CraftingKeyPlugin
+api-version: '1.21'
+description: Opens a portable crafting table with Shift+F.
