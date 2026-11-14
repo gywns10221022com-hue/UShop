@@ -1,6 +1,8 @@
 package kr.craftingkey;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -12,13 +14,21 @@ public final class CraftingKeyPlugin extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onShiftSwapHands(PlayerSwapHandItemsEvent event) {
-        if (!event.getPlayer().isSneaking()) {
+        Player player = event.getPlayer();
+
+        if (!player.isSneaking()) {
             return;
         }
 
         event.setCancelled(true);
-        event.getPlayer().openWorkbench(null, true);
+
+        // Open on the next tick so the hand-swap packet cannot override the GUI.
+        getServer().getScheduler().runTask(this, () -> {
+            if (player.isOnline()) {
+                player.openWorkbench(null, true);
+            }
+        });
     }
 }
