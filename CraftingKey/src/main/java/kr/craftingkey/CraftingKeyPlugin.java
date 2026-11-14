@@ -1,5 +1,6 @@
 package kr.craftingkey;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -22,6 +23,12 @@ public final class CraftingKeyPlugin extends JavaPlugin implements Listener {
             return;
         }
 
+        // Never intercept spear swaps: vanilla hand swapping is needed for spear-swap combos.
+        if (isSpear(event.getMainHandItem().getType())
+                || isSpear(event.getOffHandItem().getType())) {
+            return;
+        }
+
         event.setCancelled(true);
 
         // Open on the next tick so the hand-swap packet cannot override the GUI.
@@ -30,5 +37,9 @@ public final class CraftingKeyPlugin extends JavaPlugin implements Listener {
                 player.openWorkbench(null, true);
             }
         });
+    }
+
+    private boolean isSpear(Material material) {
+        return material.name().endsWith("_SPEAR");
     }
 }
